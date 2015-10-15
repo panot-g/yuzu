@@ -12,11 +12,6 @@
     <script src="codemirror/lib/codemirror.js"></script>
     <script src="codemirror/mode/python/python.js"></script>
     <script src="codemirror/mode/javascript/javascript.js"></script>
-<!--
-    <script src="codemirror/mode/css/css.js"></script>
-    <script src="codemirror/mode/htmlmixed/htmlmixed.js"></script>
-    <script src="codemirror/mode/xml/xml.js"></script>
--->
 
     <style>
       #log p,
@@ -26,6 +21,15 @@
         border: 1px solid #ddd;
         border-radius: 4px;
       }
+
+      #main_table {
+        width: 100%;
+      }
+
+      #main_table td {
+        width: 50%;
+      }
+
       .Codemirror {
         border: 1px solid #ddd;
         border-radius: 4px;
@@ -40,6 +44,9 @@
 
     <script type="text/javascript">
       function log(message, severity) {
+        // console.log(message);
+        console.log((new Error(message)).stack);
+
         var logElement = document.getElementById('log');
         var logLineElement = document.createElement('p');
         logLineElement.appendChild(document.createTextNode(message));
@@ -67,45 +74,54 @@
       // Read handler that simply reads the built-in files.
       function readHandler(fileToRead) {
         if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][fileToRead] === undefined) {
-          throw "File not found: '" + fileToRead + "'";
+          var errorMessage = "File not found: '" + fileToRead + "'";
+          log(errorMessage, 'error');
+          throw errorMessage;
         }
         return Sk.builtinFiles["files"][fileToRead];
       }
 
-      function runit(code) {
+      function on_receive_message(code) {
         clearLog();
 
-        var myPromise = Sk.misceval.asyncToPromise(
-            function() {
-              return Sk.importMainWithBody("<stdin>", false, code, true);
-            });
+        var recode = "\nimport urllib.request\n\
+onMessageReceive(urllib.request.urlopen('http://0.0.0.0:8000/msg.json').read())";
 
-         myPromise.then(
+        var myPromise = Sk.misceval.asyncToPromise(
+            Sk.importMainWithBody.bind(this, "<stdin>", false, code + recode, true));
+
+        myPromise.then(
             function(mod) {
               // All is fine.
               // console.log(mod);
             },
             function(err) {
               // Something didn't work right.
-              // Print the error to the console.
-              console.log(err.toString());
-              //
               log(err.toString(), 'error');
             });
       }
 
+      function on_send_button(code, message) {
+        clearLog();
+        var myPromise = Sk.misceval.asyncToPromise(
+            Sk.importMainWithBody.bind(this, "<stdin>", false, code + "\nonMessageSend('"+message+"')", true));
+        myPromise.then(function(mod) {}, function(err) {log(err.toString(), 'error');});
+      }
+
       function setup() {
-        var codeElement = document.getElementById("code");
+        var codeOnMessageReceiveElement = document.getElementById("codeOnMessageReceive");
+        var codeOnMessageSendElement = document.getElementById("codeOnMessageSend");
         var outputElement = document.getElementById("output");
 
-        var codeMirror = CodeMirror.fromTextArea(
-            codeElement,
-            {
-              theme: 'candy_land',
-              smartIndent: true,
-              tabSize: 4,
-              lineNumbers: true,
-            });
+        var config = {
+          theme: 'candy_land',
+          smartIndent: true,
+          tabSize: 4,
+          lineNumbers: true,
+        };
+
+        var codeMirrorSend = CodeMirror.fromTextArea(codeOnMessageSendElement, config);
+        var codeMirrorReceive = CodeMirror.fromTextArea(codeOnMessageReceiveElement, config);
 
         // Configure Skulpt.
         Sk.pre = "output";
@@ -121,9 +137,30 @@
             "click",
             function(event) {
               // CodeMirror exposes .getValue()
-              var code = (codeMirror && codeMirror.getValue()) || codeElement.value;
-              runit(code);
+              var code = (codeMirrorReceive && codeMirrorReceive.getValue()) || codeElement.value;
+              on_receive_message(code);
             });
+
+        document.getElementById("send_button").addEventListener(
+            "click",
+            function(event) {
+              // CodeMirror exposes .getValue()
+              var code = (codeMirrorSend && codeMirrorSend.getValue()) || codeElement.value;
+              var chatInputText = document.getElementById("chat_input").value
+
+              on_send_button(code, chatInputText);
+            });
+
+        function loop_receive() {
+          // CodeMirror exposes .getValue()
+          var code = (codeMirrorReceive && codeMirrorReceive.getValue()) || codeElement.value;
+          on_receive_message(code);
+
+          // loop after 1000 milliseconds.
+          window.setTimeout(loop_receive, 1000);
+        }
+
+        loop_receive();
       }
 
       // Do the setup when document is done loading.
@@ -139,22 +176,43 @@
 
     <h3>Try This</h3>
 
-    <!-- Show any Python warnings or errors here. -->
-    <div id="log">
-    </div>
+    <table id="main_table">
+      <tr>
+        <td>
+          <!-- Show any Python warnings or errors here. -->
+          <div id="log">
+          </div>
 
-    <form>
-      <textarea id="code" cols="80" rows="24"></textarea>
+          <form>
+            <textarea id="codeOnMessageReceive">
+def onMessageReceive(message):
+  print message</textarea>
 
-      <br />
+            <textarea id="codeOnMessageSend">
+def onMessageSend(message):
+  print message</textarea>
 
-      <button id="run_button" type="button">Run</button>
-    </form>
+            <br />
 
-    <pre id="output" ></pre>
+            <button id="run_button" type="button">Run</button>
+          </form>
 
-    <!-- If you want turtle graphics include a canvas -->
-    <div id="turtle_canvas"></div>
+          <pre id="output" ></pre>
+
+          <!-- If you want turtle graphics include a canvas -->
+          <div id="turtle_canvas"></div>
+        </td>
+
+        <td>
+          <form>
+            <div id="chat_output"></div>
+            <br />
+            <textarea id="chat_input" cols="80" rows="2"></textarea>
+            <button id="send_button" type="button">Send</button>
+          </form>
+        </td>
+      </tr>
+    </table>
 
   </body>
 </html>
