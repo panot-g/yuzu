@@ -25,6 +25,11 @@
         border-radius: 4px;
       }
 
+      #chat_output {
+        height: 30em;
+        overflow-y: scroll;
+      }
+
       #main_table {
         width: 100%;
       }
@@ -37,6 +42,29 @@
         height: 20em;
         overflow-y: scroll;
       }
+
+      #chat_input {
+        height: 2em;
+        width: auto;
+      }
+
+      #run_button {
+        color: #009900;
+      }
+
+      #stop_button {
+        color: #DD4444;
+      }
+
+      #send_button {
+        color: #438AFB;
+      }
+
+      #controls {
+        text-align: right;
+        padding: 1ex;
+      }
+
 
       .Codemirror {
         border: 1px solid #ddd;
@@ -131,6 +159,10 @@
 
 
       function on_send_button(message) {
+        if (!onMessageSendFunction) {
+          log('Couldn\'t find any code for onMessageSend(message). Did you run the code yet?', 'error');
+          return;
+        }
         Sk.misceval.callsim(
             onMessageSendFunction,
             new Sk.builtin.str(message));
@@ -207,7 +239,7 @@
   <body>
 
     <h3>
-      <i class="material-icons large">question_answer</i>
+      <i class="material-icons">question_answer</i>
       Let's Chat
     </h3>
 
@@ -219,18 +251,6 @@
           </div>
 
           <form>
-            <button id="stop_button" type="button">
-              <i class="material-icons medium">stop</i>
-            </button>
-
-            &nbsp;
-
-            <button id="run_button" type="button">
-              <i class="material-icons medium">play_arrow</i>
-            </button>
-
-            <br />
-
             <textarea id="code">
 # Load a library that allows us to "open" an URL (web address).
 import urllib.request
@@ -260,6 +280,18 @@ def onTimerTick():
   # Hand the message to onMessageReceive.
   onMessageReceive(messageFromServer)
 </textarea>
+
+            <div id="controls">
+              <button id="stop_button" type="button">
+                <i class="material-icons medium">stop</i>
+              </button>
+
+              <!-- &nbsp; -->
+
+              <button id="run_button" type="button">
+                <i class="material-icons medium">play_arrow</i>
+              </button>
+            </div>
           </form>
 
           <pre id="output" ></pre>
@@ -271,12 +303,12 @@ def onTimerTick():
           <form>
             <div id="chat_output"></div>
 
-            <br />
-
-            <textarea id="chat_input" cols="80" rows="2"></textarea>
-            <button id="send_button" type="button">
-              <i class="material-icons large">chat</i>
-            </button>
+            <div>
+              <textarea id="chat_input"></textarea>
+              <button id="send_button" type="button">
+                <i class="material-icons large">chat</i>
+              </button>
+            </div>
           </form>
         </td>
       </tr>
