@@ -15,7 +15,8 @@
 
     <style>
       #log p,
-      #output {
+      #output,
+      #chat_output {
         background: #eee;
         padding: 6px 12px;
         border: 1px solid #ddd;
@@ -30,19 +31,38 @@
         width: 50%;
       }
 
+      #output {
+        height: 20em;
+        overflow-y: scroll;
+      }
+
       .Codemirror {
         border: 1px solid #ddd;
         border-radius: 4px;
+        height: auto;
+        line-height: 1.5em;
+        font-family: monospace;
       }
 
       .success { background-color: #dff0d8 !important; }
       .info { background-color: #d9edf7 !important; }
       .warning { background-color: #fcf8e3 !important; }
       .error { background-color: #f2dede !important; }
+
+      table td,
+      table td * {
+        vertical-align: top;
+      }
     </style>
 
 
     <script type="text/javascript">
+      var codeMirror;
+
+      var onMessageSendFunction = null;
+      var onTimerTickFunction = null;
+
+
       function log(message, severity) {
         // console.log(message);
         console.log((new Error(message)).stack);
@@ -58,6 +78,7 @@
         logElement.appendChild(logLineElement);
       }
 
+
       function clearLog() {
         var logElement = document.getElementById('log');
         for (var i = logElement.childNodes.length-1; i >= 0; i--) {
@@ -65,35 +86,39 @@
         }
       }
 
+
       // Appends some text to a pre element.
       function outputFunction(text) {
         var outputElement = document.getElementById("output");
         outputElement.innerHTML = outputElement.innerHTML + text;
       }
 
+
       // Read handler that simply reads the built-in files.
       function readHandler(fileToRead) {
         if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][fileToRead] === undefined) {
           var errorMessage = "File not found: '" + fileToRead + "'";
-          log(errorMessage, 'error');
+          // This function is called multiple times, once for each possible path.
+          // Errors here aren't necessarily bad.
+          // log(errorMessage, 'error');
           throw errorMessage;
         }
         return Sk.builtinFiles["files"][fileToRead];
       }
 
-      function on_receive_message(code) {
+
+      function run_code(code) {
         clearLog();
 
-        var recode = "\nimport urllib.request\n\
-onMessageReceive(urllib.request.urlopen('http://0.0.0.0:8000/msg.json').read())";
-
         var myPromise = Sk.misceval.asyncToPromise(
-            Sk.importMainWithBody.bind(this, "<stdin>", false, code + recode, true));
+            Sk.importMainWithBody.bind(this, "<stdin>", false, code, true));
 
         myPromise.then(
             function(mod) {
               // All is fine.
               // console.log(mod);
+              onMessageSendFunction = mod.$d.onMessageSend;
+              onTimerTickFunction = mod.$d.onTimerTick;
             },
             function(err) {
               // Something didn't work right.
@@ -101,16 +126,26 @@ onMessageReceive(urllib.request.urlopen('http://0.0.0.0:8000/msg.json').read())"
             });
       }
 
-      function on_send_button(code, message) {
-        clearLog();
-        var myPromise = Sk.misceval.asyncToPromise(
-            Sk.importMainWithBody.bind(this, "<stdin>", false, code + "\nonMessageSend('"+message+"')", true));
-        myPromise.then(function(mod) {}, function(err) {log(err.toString(), 'error');});
+
+      function on_send_button(message) {
+        Sk.misceval.callsim(
+            onMessageSendFunction,
+            new Sk.builtin.str(message));
       }
 
+
+      function loop_timer() {
+        if (onTimerTickFunction) {
+          Sk.misceval.callsim(onTimerTickFunction);
+        }
+
+        // loop after 1000 milliseconds.
+        window.setTimeout(loop_timer, 1000);
+      }
+
+
       function setup() {
-        var codeOnMessageReceiveElement = document.getElementById("codeOnMessageReceive");
-        var codeOnMessageSendElement = document.getElementById("codeOnMessageSend");
+        var codeElement = document.getElementById("code");
         var outputElement = document.getElementById("output");
 
         var config = {
@@ -118,10 +153,15 @@ onMessageReceive(urllib.request.urlopen('http://0.0.0.0:8000/msg.json').read())"
           smartIndent: true,
           tabSize: 4,
           lineNumbers: true,
+          lineWrapping: true,
+          //
+          // foldGutter: true,
+          // gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
         };
 
-        var codeMirrorSend = CodeMirror.fromTextArea(codeOnMessageSendElement, config);
-        var codeMirrorReceive = CodeMirror.fromTextArea(codeOnMessageReceiveElement, config);
+        codeMirror = CodeMirror.fromTextArea(codeElement, config);
+
+        // codeMirror.foldCode(CodeMirror.Pos(8, 0));
 
         // Configure Skulpt.
         Sk.pre = "output";
@@ -137,30 +177,19 @@ onMessageReceive(urllib.request.urlopen('http://0.0.0.0:8000/msg.json').read())"
             "click",
             function(event) {
               // CodeMirror exposes .getValue()
-              var code = (codeMirrorReceive && codeMirrorReceive.getValue()) || codeElement.value;
-              on_receive_message(code);
+              var code = (codeMirror && codeMirror.getValue()) || codeElement.value;
+              // var code = (codeMirrorReceive && codeMirrorReceive.getValue()) || codeElement.value;
+              run_code(code);
+
+              loop_timer();
             });
 
         document.getElementById("send_button").addEventListener(
             "click",
             function(event) {
-              // CodeMirror exposes .getValue()
-              var code = (codeMirrorSend && codeMirrorSend.getValue()) || codeElement.value;
               var chatInputText = document.getElementById("chat_input").value
-
-              on_send_button(code, chatInputText);
+              on_send_button(chatInputText);
             });
-
-        function loop_receive() {
-          // CodeMirror exposes .getValue()
-          var code = (codeMirrorReceive && codeMirrorReceive.getValue()) || codeElement.value;
-          on_receive_message(code);
-
-          // loop after 1000 milliseconds.
-          window.setTimeout(loop_receive, 1000);
-        }
-
-        loop_receive();
       }
 
       // Do the setup when document is done loading.
@@ -174,7 +203,7 @@ onMessageReceive(urllib.request.urlopen('http://0.0.0.0:8000/msg.json').read())"
 
   <body>
 
-    <h3>Try This</h3>
+    <h3>Let's Chat</h3>
 
     <table id="main_table">
       <tr>
@@ -184,13 +213,34 @@ onMessageReceive(urllib.request.urlopen('http://0.0.0.0:8000/msg.json').read())"
           </div>
 
           <form>
-            <textarea id="codeOnMessageReceive">
-def onMessageReceive(message):
-  print message</textarea>
+            <textarea id="code">
+# Load a library that allows us to "open" an URL (web address).
+import urllib.request
 
-            <textarea id="codeOnMessageSend">
+
+CHAT_SERVER_ADDRESS = 'http://0.0.0.0:8000/msg.json'
+
+
+# This method will be called (run) every time we receive a message from the chat server.
+def onMessageReceive(message):
+  print 'Received: ' + message
+
+
+# This method will be called (run) every time we press the 'send' button.
 def onMessageSend(message):
-  print message</textarea>
+  print 'Sending: ' + message
+
+
+def onTimerTick():
+  # Open a connection to the chat server.
+  connectionToServer = urllib.request.urlopen(CHAT_SERVER_ADDRESS)
+
+  # Read the response from the server.
+  messageFromServer = connectionToServer.read()
+
+  # Hand the message to onMessageReceive.
+  onMessageReceive(messageFromServer)
+</textarea>
 
             <br />
 
@@ -199,14 +249,15 @@ def onMessageSend(message):
 
           <pre id="output" ></pre>
 
-          <!-- If you want turtle graphics include a canvas -->
           <div id="turtle_canvas"></div>
         </td>
 
         <td>
           <form>
             <div id="chat_output"></div>
+
             <br />
+
             <textarea id="chat_input" cols="80" rows="2"></textarea>
             <button id="send_button" type="button">Send</button>
           </form>
