@@ -85,6 +85,21 @@
       }
     </style>
 
+    <script type="text/javascript" id="chat_module">
+      var $builtinmodule = function(name) {
+        var mod = {};
+
+        mod.addImageToChat = new Sk.builtin.func(function(src) {
+          var chatOutputElement = document.getElementById('chat_output');
+          var newImage = document.createElement('img');
+          newImage.src = src.v;
+          chatOutputElement.appendChild(newImage);
+          return newImage;
+        });
+
+        return mod;
+      }
+    </script>
 
     <script type="text/javascript">
       var codeMirror;
@@ -92,10 +107,12 @@
       var onMessageSendFunction = null;
       var onTimerTickFunction = null;
 
+      var running = false;
+
 
       function log(message, severity) {
         // console.log(message);
-        console.log((new Error(message)).stack);
+        // console.log((new Error(message)).stack);
 
         var logElement = document.getElementById('log');
         var logLineElement = document.createElement('p');
@@ -170,7 +187,12 @@
 
 
       function loop_timer() {
+        if (!running) {
+          return;
+        }
+
         if (onTimerTickFunction) {
+          // This is blocking.
           Sk.misceval.callsim(onTimerTickFunction);
         }
 
@@ -211,12 +233,22 @@
         document.getElementById("run_button").addEventListener(
             "click",
             function(event) {
+              running = true;
+
+              clearLog();
+
               // CodeMirror exposes .getValue()
               var code = (codeMirror && codeMirror.getValue()) || codeElement.value;
               // var code = (codeMirrorReceive && codeMirrorReceive.getValue()) || codeElement.value;
               run_code(code);
 
               loop_timer();
+            });
+
+        document.getElementById("stop_button").addEventListener(
+            "click",
+            function(event) {
+              running = false;
             });
 
         document.getElementById("send_button").addEventListener(
@@ -233,6 +265,8 @@
           function(event) {
             setup();
           });
+
+      Sk.builtinFiles["files"][ 'src/builtin/chat.js'] = document.getElementById('chat_module').text;
     </script>
   </head>
 
@@ -254,9 +288,10 @@
             <textarea id="code">
 # Load a library that allows us to "open" an URL (web address).
 import urllib.request
+import chat
 
 
-CHAT_SERVER_ADDRESS = 'http://0.0.0.0:8000/msg.json'
+CHAT_SERVER_ADDRESS = 'http://0.0.0.0:8080/chat'
 
 
 # This method will be called (run) every time we receive a message from the chat server.
