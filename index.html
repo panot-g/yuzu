@@ -30,6 +30,11 @@
         overflow-y: scroll;
       }
 
+      #chat_input {
+        height: 2em;
+        width: 90%;
+      }
+
       #main_table {
         width: 100%;
       }
@@ -41,11 +46,9 @@
       #output {
         height: 20em;
         overflow-y: scroll;
-      }
-
-      #chat_input {
-        height: 2em;
-        width: auto;
+        overflow-x: scroll;
+        width: 80ex;
+        float: right;
       }
 
       #run_button {
@@ -58,6 +61,7 @@
 
       #send_button {
         color: #438AFB;
+        width: 9%;
       }
 
       #controls {
@@ -95,6 +99,30 @@
           newImage.src = src.v;
           chatOutputElement.appendChild(newImage);
           return newImage;
+        });
+
+        mod.addTextToChat = new Sk.builtin.func(function(text) {
+          var chatOutputElement = document.getElementById('chat_output');
+          var newdiv = document.createElement('div');
+          newdiv.appendChild(document.createTextNode(text.v));
+          chatOutputElement.appendChild(newdiv);
+          return newImage;
+        });
+
+        return mod;
+      }
+    </script>
+
+    <script type="text/javascript" id="json_module">
+      var $builtinmodule = function(name) {
+        var mod = {};
+
+        mod.loads = new Sk.builtin.func(function(jsonStr) {
+          return Sk.ffi.remapToPy(JSON.parse(jsonStr.v));
+        });
+
+        mod.dumps = new Sk.builtin.func(function(value) {
+          return Sk.ffi.remapToPy(JSON.stringify(value.v));
         });
 
         return mod;
@@ -193,7 +221,11 @@
 
         if (onTimerTickFunction) {
           // This is blocking.
-          Sk.misceval.callsim(onTimerTickFunction);
+          try {
+            Sk.misceval.callsim(onTimerTickFunction);
+          } catch (e) {
+            log(e, 'error');
+          }
         }
 
         // loop after 1000 milliseconds.
@@ -266,7 +298,9 @@
             setup();
           });
 
+      // Install some of our own modules.
       Sk.builtinFiles["files"][ 'src/builtin/chat.js'] = document.getElementById('chat_module').text;
+      Sk.builtinFiles["files"][ 'src/builtin/json.js'] = document.getElementById('json_module').text;
     </script>
   </head>
 
@@ -280,18 +314,15 @@
     <table id="main_table">
       <tr>
         <td>
-          <!-- Show any Python warnings or errors here. -->
-          <div id="log">
-          </div>
-
           <form>
             <textarea id="code">
 # Load a library that allows us to "open" an URL (web address).
 import urllib.request
 import chat
+import json
 
 
-CHAT_SERVER_ADDRESS = 'http://0.0.0.0:8080/chat'
+CHAT_SERVER_ADDRESS = 'http://192.168.2.172:8080/chat'
 
 
 # This method will be called (run) every time we receive a message from the chat server.
@@ -312,15 +343,17 @@ def onTimerTick():
   # Read the response from the server.
   messageFromServer = connectionToServer.read()
 
-  # Hand the message to onMessageReceive.
-  onMessageReceive(messageFromServer)
+  messages = json.loads(messageFromServer)
+
+  for message in messages:
+    # Hand the message to onMessageReceive.
+    onMessageReceive(message['message'])
 </textarea>
 
             <div id="controls">
               <button id="stop_button" type="button">
                 <i class="material-icons medium">stop</i>
               </button>
-
               <!-- &nbsp; -->
 
               <button id="run_button" type="button">
@@ -329,6 +362,10 @@ def onTimerTick():
             </div>
           </form>
 
+          <!-- Show any Python warnings or errors here. -->
+          <div id="log"></div>
+
+          <!-- Show any Python stdout here. -->
           <pre id="output" ></pre>
 
           <div id="turtle_canvas"></div>
