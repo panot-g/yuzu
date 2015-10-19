@@ -103,10 +103,10 @@
 
         mod.addTextToChat = new Sk.builtin.func(function(text) {
           var chatOutputElement = document.getElementById('chat_output');
-          var newdiv = document.createElement('div');
-          newdiv.appendChild(document.createTextNode(text.v));
-          chatOutputElement.appendChild(newdiv);
-          return newImage;
+          var newDiv = document.createElement('div');
+          newDiv.appendChild(document.createTextNode(text.v));
+          chatOutputElement.appendChild(newDiv);
+          return newDiv;
         });
 
         return mod;
@@ -337,17 +337,29 @@ def onMessageSend(message):
 
 # This method is called every 1 second.
 def onTimerTick():
+  messages = getMessagesFromServer()
+  for message in messages:
+    # Hand the message to onMessageReceive.
+    onMessageReceive(message)
+
+
+# Request all chat messages from the server.
+def getMessagesFromServer():
   # Open a connection to the chat server.
   connectionToServer = urllib.request.urlopen(CHAT_SERVER_ADDRESS)
 
   # Read the response from the server.
-  messageFromServer = connectionToServer.read()
+  responseFromServer = connectionToServer.read()
 
-  messages = json.loads(messageFromServer)
+  messageObjects = json.loads(responseFromServer)
 
-  for message in messages:
-    # Hand the message to onMessageReceive.
-    onMessageReceive(message['message'])
+  allMessages = []
+  for messageObject in messageObjects:
+    message = messageObject['message']
+    allMessages.append(message)
+
+  return allMessages
+
 </textarea>
 
             <div id="controls">
