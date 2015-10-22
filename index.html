@@ -237,6 +237,12 @@
         var codeElement = document.getElementById("code");
         var outputElement = document.getElementById("output");
 
+        // Dynamically change the constant server address to point to the actual
+        // host.
+        codeElement.value = codeElement.value.replace(
+            "CHAT_SERVER_ADDRESS = 'http://localhost:8080/chat'",
+            "CHAT_SERVER_ADDRESS = '" + document.location.origin + "/chat'");
+
         var config = {
           theme: 'candy_land',
           smartIndent: true,
@@ -322,7 +328,7 @@ import chat
 import json
 
 
-CHAT_SERVER_ADDRESS = 'http://192.168.2.172:8080/chat'
+CHAT_SERVER_ADDRESS = 'http://localhost:8080/chat'
 
 
 # This method will be called (run) every time we receive a message from the chat server.
