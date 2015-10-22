@@ -10,10 +10,20 @@
 }
 .cm-s-candy_land .cm-comment {
 	font-style: italic;
-	color: #1E9AE0;
+	/*color: #1E9AE0;*/ /*light blue*/
+	color: #FF92AE; /*pink*/
+}
+.cm-s-candy_land .cm-def {
+	color: #7E00C7; /*purple-ish*/
 }
 .cm-s-candy_land .cm-keyword {
 	color: #4f9aed;
+}
+.cm-s-candy_land .cm-operator {
+	color: #4f9aed;
+}
+.cm-s-candy_land .cm-number {
+	color: #FF6200; /*orange*/
 }
 .cm-s-candy_land .cm-string {
 	color: #65BA3A;

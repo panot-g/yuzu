@@ -2,10 +2,11 @@ from bottle import Bottle, view, request
 
 from collections import deque
 import json
+import StringIO
 
 
 # App Engine ?
-app = Bottle()
+app = Bottle(catchall=False)
 
 
 # This is the global, shared list of the most recent messages.
@@ -25,9 +26,18 @@ def chat_get():
 
 @app.post('/chat', method='POST')
 def chat_post():
+    jsonMessage = None
+
     try:
-        jsonMessage = request.json
+        if request.json:
+            jsonMessage = request.json
+        elif request.body:
+            # request.body is a StringIO instance
+            jsonMessage = json.loads(request.body.getvalue())
+        else:
+            return {'status': 'ERROR', 'description': 'No JSON message received.'}
     except ValueError as e:
+        print e
         return {'status': 'ERROR', 'description': 'Could not parse JSON.'}
 
     if not jsonMessage:
