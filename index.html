@@ -349,6 +349,8 @@ def onTimerTick():
     onMessageReceive(message)
 
 
+
+
 # Request all chat messages from the server.
 def getMessagesFromServer():
   # Open a connection to the chat server.
@@ -357,12 +359,16 @@ def getMessagesFromServer():
   # Read the response from the server.
   responseFromServer = connectionToServer.read()
 
-  messageObjects = json.loads(responseFromServer)
+  messagesObject = json.loads(responseFromServer)
+  messagesList = messagesObject['messages']
 
   allMessages = []
-  for messageObject in messageObjects:
+  for messageObject in messagesList:
     message = messageObject['message']
     allMessages.append(message)
+
+  if len(allMessages) == 0:
+    print 'There were no messages.'
 
   return allMessages
 
