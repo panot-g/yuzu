@@ -94,19 +94,21 @@
         var mod = {};
 
         mod.addImageToChat = new Sk.builtin.func(function(src) {
+          var _src = Sk.ffi.remapToJs(src);
           var chatOutputElement = document.getElementById('chat_output');
           var newImage = document.createElement('img');
-          newImage.src = src.v;
+          newImage.src = _src;
           chatOutputElement.appendChild(newImage);
-          return newImage;
+          return Sk.ffi.remapToPy(newImage);
         });
 
         mod.addTextToChat = new Sk.builtin.func(function(text) {
+          var _text = Sk.ffi.remapToJs(text);
           var chatOutputElement = document.getElementById('chat_output');
           var newDiv = document.createElement('div');
-          newDiv.appendChild(document.createTextNode(text.v));
+          newDiv.appendChild(document.createTextNode(_text));
           chatOutputElement.appendChild(newDiv);
-          return newDiv;
+          return Sk.ffi.remapToPy(newDiv);
         });
 
         return mod;
@@ -388,6 +390,15 @@ def sendMessageToServer(message):
       '{"message": "' + message + '"}')
   # Read the response from the server.
   print connectionToServer.read()
+
+
+# Adds an image to the chat window.
+def addImageToChat(imageURL):
+  chat.addImageToChat(imageURL)
+
+# Adds a text box to the chat.
+def addTextToChat(text):
+  chat.addTextToChat(text)
 </textarea>
 
             <div id="controls">

@@ -12,6 +12,8 @@ handlers:
 - url: /skulpt
   static_dir: static/skulpt
 
+- url: /img
+  static_dir: static/img
+
 - url: .*
   script: main.app
-
