@@ -26,7 +26,13 @@ def chat_get():
 @app.post('/chat', method='POST')
 def chat_post():
     try:
-        jsonMessage = request.json
+        if request.json:
+            jsonMessage = request.json
+        elif request.body:
+            # request.body is a StringIO.
+            jsonMessage = json.loads(request.body.getvalue())
+        else:
+            return {'status': 'ERROR', 'description': 'No message received.'}
     except ValueError as e:
         return {'status': 'ERROR', 'description': 'Could not parse JSON.'}
 

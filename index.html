@@ -208,9 +208,13 @@
           log('Couldn\'t find any code for onMessageSend(message). Did you run the code yet?', 'error');
           return;
         }
-        Sk.misceval.callsim(
-            onMessageSendFunction,
-            new Sk.builtin.str(message));
+        try {
+          Sk.misceval.callsim(
+              onMessageSendFunction,
+              new Sk.builtin.str(message));
+        } catch(e) {
+          log(e, 'error');
+        }
       }
 
 
@@ -372,6 +376,15 @@ def getMessagesFromServer():
 
   return allMessages
 
+
+# Send a new message to the server.
+def sendMessageToServer(message):
+  # Put out message into the request sent to the server.
+  connectionToServer = urllib.request.urlopen(
+      CHAT_SERVER_ADDRESS,
+      '{"message": "' + message + '"}')
+  # Read the response from the server.
+  print connectionToServer.read()
 </textarea>
 
             <div id="controls">
