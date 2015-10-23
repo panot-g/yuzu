@@ -118,11 +118,11 @@
         var mod = {};
 
         mod.loads = new Sk.builtin.func(function(jsonStr) {
-          return Sk.ffi.remapToPy(JSON.parse(jsonStr.v));
+          return Sk.ffi.remapToPy(JSON.parse(Sk.ffi.remapToJs(jsonStr)));
         });
 
         mod.dumps = new Sk.builtin.func(function(value) {
-          return Sk.ffi.remapToPy(JSON.stringify(value.v));
+          return Sk.ffi.remapToPy(JSON.stringify(Sk.ffi.remapToJs(value)));
         });
 
         return mod;
@@ -230,6 +230,8 @@
           } catch (e) {
             log(e, 'error');
           }
+        } else {
+          log('Couldn\'t find the onTimerTick() function.', 'error');
         }
 
         // loop after 1000 milliseconds.
@@ -284,7 +286,8 @@
               // var code = (codeMirrorReceive && codeMirrorReceive.getValue()) || codeElement.value;
               run_code(code);
 
-              loop_timer();
+              // Delay as the code above needs to run complete first.
+              window.setTimeout(loop_timer, 1000);
             });
 
         document.getElementById("stop_button").addEventListener(
