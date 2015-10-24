@@ -94,19 +94,21 @@
         var mod = {};
 
         mod.addImageToChat = new Sk.builtin.func(function(src) {
+          var _src = Sk.ffi.remapToJs(src);
           var chatOutputElement = document.getElementById('chat_output');
           var newImage = document.createElement('img');
-          newImage.src = src.v;
+          newImage.src = _src;
           chatOutputElement.appendChild(newImage);
-          return newImage;
+          return Sk.ffi.remapToPy(newImage);
         });
 
         mod.addTextToChat = new Sk.builtin.func(function(text) {
+          var _text = Sk.ffi.remapToJs(text);
           var chatOutputElement = document.getElementById('chat_output');
           var newDiv = document.createElement('div');
-          newDiv.appendChild(document.createTextNode(text.v));
+          newDiv.appendChild(document.createTextNode(_text));
           chatOutputElement.appendChild(newDiv);
-          return newDiv;
+          return Sk.ffi.remapToPy(newDiv);
         });
 
         return mod;
@@ -118,11 +120,11 @@
         var mod = {};
 
         mod.loads = new Sk.builtin.func(function(jsonStr) {
-          return Sk.ffi.remapToPy(JSON.parse(jsonStr.v));
+          return Sk.ffi.remapToPy(JSON.parse(Sk.ffi.remapToJs(jsonStr)));
         });
 
         mod.dumps = new Sk.builtin.func(function(value) {
-          return Sk.ffi.remapToPy(JSON.stringify(value.v));
+          return Sk.ffi.remapToPy(JSON.stringify(Sk.ffi.remapToJs(value)));
         });
 
         return mod;
@@ -208,9 +210,13 @@
           log('Couldn\'t find any code for onMessageSend(message). Did you run the code yet?', 'error');
           return;
         }
-        Sk.misceval.callsim(
-            onMessageSendFunction,
-            new Sk.builtin.str(message));
+        try {
+          Sk.misceval.callsim(
+              onMessageSendFunction,
+              new Sk.builtin.str(message));
+        } catch(e) {
+          log(e, 'error');
+        }
       }
 
 
@@ -226,6 +232,8 @@
           } catch (e) {
             log(e, 'error');
           }
+        } else {
+          log('Couldn\'t find the onTimerTick() function.', 'error');
         }
 
         // loop after 1000 milliseconds.
@@ -280,7 +288,8 @@
               // var code = (codeMirrorReceive && codeMirrorReceive.getValue()) || codeElement.value;
               run_code(code);
 
-              loop_timer();
+              // Delay as the code above needs to run complete first.
+              window.setTimeout(loop_timer, 1000);
             });
 
         document.getElementById("stop_button").addEventListener(
@@ -372,6 +381,24 @@ def getMessagesFromServer():
 
   return allMessages
 
+
+# Send a new message to the server.
+def sendMessageToServer(message):
+  # Put out message into the request sent to the server.
+  connectionToServer = urllib.request.urlopen(
+      CHAT_SERVER_ADDRESS,
+      '{"message": "' + message + '"}')
+  # Read the response from the server.
+  print connectionToServer.read()
+
+
+# Adds an image to the chat window.
+def addImageToChat(imageURL):
+  chat.addImageToChat(imageURL)
+
+# Adds a text box to the chat.
+def addTextToChat(text):
+  chat.addTextToChat(text)
 </textarea>
 
             <div id="controls">

@@ -32,10 +32,10 @@ def chat_post():
         if request.json:
             jsonMessage = request.json
         elif request.body:
-            # request.body is a StringIO instance
+            # request.body is a StringIO.
             jsonMessage = json.loads(request.body.getvalue())
         else:
-            return {'status': 'ERROR', 'description': 'No JSON message received.'}
+            return {'status': 'ERROR', 'description': 'No message received.'}
     except ValueError as e:
         print e
         return {'status': 'ERROR', 'description': 'Could not parse JSON.'}
