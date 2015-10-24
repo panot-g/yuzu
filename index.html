@@ -99,7 +99,8 @@
           var newImage = document.createElement('img');
           newImage.src = _src;
           chatOutputElement.appendChild(newImage);
-          return Sk.ffi.remapToPy(newImage);
+          // This seems to cause 'RangeError: Maximum call stack size exceeded'.
+          // return Sk.ffi.remapToPy(newImage);
         });
 
         mod.addTextToChat = new Sk.builtin.func(function(text) {
@@ -108,7 +109,8 @@
           var newDiv = document.createElement('div');
           newDiv.appendChild(document.createTextNode(_text));
           chatOutputElement.appendChild(newDiv);
-          return Sk.ffi.remapToPy(newDiv);
+          // This seems to cause 'RangeError: Maximum call stack size exceeded'.
+          // return Sk.ffi.remapToPy(newDiv);
         });
 
         return mod;
@@ -141,9 +143,6 @@
 
 
       function log(message, severity) {
-        // console.log(message);
-        // console.log((new Error(message)).stack);
-
         var logElement = document.getElementById('log');
         var logLineElement = document.createElement('p');
         logLineElement.appendChild(document.createTextNode(message));
@@ -151,6 +150,10 @@
         if (!!severity) {
           logLineElement.className = severity;
           // <i class="material-icons large">question_answer</i>
+          if (severity == 'error') {
+            console.log(message);
+            console.log((new Error(message)).stack);
+          }
         }
 
         logElement.appendChild(logLineElement);
@@ -251,6 +254,13 @@
             "CHAT_SERVER_ADDRESS = 'http://localhost:8080/chat'",
             "CHAT_SERVER_ADDRESS = '" + document.location.origin + "/chat'");
 
+        // If we previously played with code on this site, try load the old
+        // version from Local Storage.
+        var oldCode = window.localStorage.getItem('code');
+        if (oldCode) {
+          codeElement.value = oldCode;
+        }
+
         var config = {
           theme: 'candy_land',
           smartIndent: true,
@@ -263,6 +273,17 @@
         };
 
         codeMirror = CodeMirror.fromTextArea(codeElement, config);
+
+        // Whenever changes are made to the code, auto-save to Local Storage.
+        codeMirror.on("change", function (cm) {
+          var code = cm.getValue();
+          window.localStorage.setItem('code', code);
+
+          // Compile the code.
+          clearLog();
+          var code = (codeMirror && codeMirror.getValue()) || codeElement.value;
+          run_code(code);
+        });
 
         // codeMirror.foldCode(CodeMirror.Pos(8, 0));
 
@@ -285,7 +306,6 @@
 
               // CodeMirror exposes .getValue()
               var code = (codeMirror && codeMirror.getValue()) || codeElement.value;
-              // var code = (codeMirrorReceive && codeMirrorReceive.getValue()) || codeElement.value;
               run_code(code);
 
               // Delay as the code above needs to run complete first.
@@ -384,10 +404,14 @@ def getMessagesFromServer():
 
 # Send a new message to the server.
 def sendMessageToServer(message):
+  messageObject = {
+    'message': message
+  }
+  messageJSON = json.dumps(messageObject)
   # Put out message into the request sent to the server.
   connectionToServer = urllib.request.urlopen(
       CHAT_SERVER_ADDRESS,
-      '{"message": "' + message + '"}')
+      messageJSON)
   # Read the response from the server.
   print connectionToServer.read()
 
