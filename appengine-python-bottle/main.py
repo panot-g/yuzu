@@ -16,8 +16,7 @@ MESSAGES = deque(maxlen=20)
 @app.route('/')
 @view('views/index')
 def index():
-    #host = bottle.request.get_header('host')
-    host = ''
+    host = request.get_header('host')
     return dict(host=host)
 
 @app.route('/chat')
@@ -27,6 +26,8 @@ def chat_get():
 @app.post('/chat', method='POST')
 def chat_post():
     jsonMessage = None
+
+    client_ip = request['REMOTE_ADDR']
 
     try:
         if request.json:
@@ -43,7 +44,10 @@ def chat_post():
     if not jsonMessage:
         return {'status': 'ERROR', 'description': 'No JSON message received.'}
 
-    MESSAGES.append({'message': jsonMessage['message']})
+    MESSAGES.append({
+        'sender': client_ip,
+        'message': jsonMessage['message'],
+    })
 
     return {'status': 'OK'}
 

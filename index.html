@@ -113,6 +113,10 @@
           // return Sk.ffi.remapToPy(newDiv);
         });
 
+        mod.bikeshed = new Sk.builtin.func(function() {
+          // bikeshed
+        });
+
         return mod;
       }
     </script>
@@ -267,9 +271,11 @@
           tabSize: 4,
           lineNumbers: true,
           lineWrapping: true,
-          //
+          // Code folding.
           // foldGutter: true,
           // gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+          // Active line highlighting.
+          // styleActiveLine: true,
         };
 
         codeMirror = CodeMirror.fromTextArea(codeElement, config);
@@ -277,12 +283,25 @@
         // Whenever changes are made to the code, auto-save to Local Storage.
         codeMirror.on("change", function (cm) {
           var code = cm.getValue();
-          window.localStorage.setItem('code', code);
+          window.localStorage.setItem("code", code);
 
           // Compile the code.
           clearLog();
           var code = (codeMirror && codeMirror.getValue()) || codeElement.value;
           run_code(code);
+        });
+
+        codeMirror.on("blur", function (cm) {
+          // console.log("blur");
+        });
+
+        codeMirror.on("cursorActivity", function (cm) {
+          // console.log("cursorActivity");
+          // editor.setLineClass(hlLine, null, null);
+          // hlLine = editor.setLineClass(editor.getCursor().line, null, "activeline");
+          var line = cm.getCursor(true).line; // zero indexed
+          var info = cm.lineInfo(line);
+          console.log(info);
         });
 
         // codeMirror.foldCode(CodeMirror.Pos(8, 0));
@@ -361,23 +380,30 @@ CHAT_SERVER_ADDRESS = 'http://localhost:8080/chat'
 
 
 # This method will be called (run) every time we receive a message from the chat server.
-def onMessageReceive(message):
+def onMessageReceive(message, sender):
   print 'Received: ' + message
 
 
 # This method will be called every time we press the 'send' button.
 def onMessageSend(message):
-  print 'Sending: ' + message
+  print 'Send: ' + message
 
 
 # This method is called every 1 second.
 def onTimerTick():
+  print 'Tick!'
+
+
+
+
+#
+def receiveAllMessages():
   messages = getMessagesFromServer()
-  for message in messages:
+  for messageObject in messages:
+    sender = messageObject['sender']
+    message = messageObject['message']
     # Hand the message to onMessageReceive.
-    onMessageReceive(message)
-
-
+    onMessageReceive(message, sender)
 
 
 # Request all chat messages from the server.
@@ -391,15 +417,10 @@ def getMessagesFromServer():
   messagesObject = json.loads(responseFromServer)
   messagesList = messagesObject['messages']
 
-  allMessages = []
-  for messageObject in messagesList:
-    message = messageObject['message']
-    allMessages.append(message)
-
-  if len(allMessages) == 0:
+  if len(messagesList) == 0:
     print 'There were no messages.'
 
-  return allMessages
+  return messagesList
 
 
 # Send a new message to the server.
