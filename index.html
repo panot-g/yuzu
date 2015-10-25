@@ -379,7 +379,7 @@ import json
 CHAT_SERVER_ADDRESS = 'http://localhost:8080/chat'
 
 
-# This method will be called (run) every time we receive a message from the chat server.
+# This method should be called (run) every time we receive a message from the chat server.
 def onMessageReceive(message, sender):
   print 'Received: ' + message
 
@@ -396,9 +396,10 @@ def onTimerTick():
 
 
 
-#
+# Get and loop through all messages from the server.
 def receiveAllMessages():
   messages = getMessagesFromServer()
+  # Loop through all the messages from the server one by one.
   for messageObject in messages:
     sender = messageObject['sender']
     message = messageObject['message']
