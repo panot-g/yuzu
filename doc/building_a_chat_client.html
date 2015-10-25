@@ -1,0 +1,422 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link href='https://fonts.googleapis.com/css?family=Slabo+27px' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Lora' rel='stylesheet' type='text/css'>
+
+    <link rel=stylesheet href="../codemirror/lib/codemirror.css">
+    <link rel=stylesheet href="../codemirror/theme/candy_land.css">
+    <script src="../codemirror/lib/codemirror.js"></script>
+    <script src="../codemirror/mode/python/python.js"></script>
+    <script src="../codemirror/mode/javascript/javascript.js"></script>
+
+    <style>
+      @media screen {
+        html {
+          background: #DDDDDD;
+        }
+
+        body {
+          width: 230mm; /*210mm + 2x10mm*/
+          margin: 0 auto;
+        }
+
+        .A4 {
+          background: #F7F7F7;
+          width: 190mm; /*210mm - 2x10mm*/
+          height: 277mm; /*297mm - 2x10mm*/
+          padding: 10mm 10mm 10mm 10mm;
+          margin: 10mm 10mm 10mm 10mm;
+          /* 3D shadow */
+          box-shadow: 0px 0px 1px #999,
+                      2px 2px 4px #999,
+        }
+      }
+
+      @media print {
+        .A4 {
+          page-break-after: always;
+        }
+      }
+
+
+      html {
+        /*font-family: 'Slabo 27px', serif;*/
+        font-family: 'Lora', serif;
+        line-height: 130%;
+      }
+
+      img {
+        max-width: 100%;
+      }
+
+      .notice {
+        background: #f0f0f0;
+        border: 1px solid #bbb;
+      }
+
+      .output {
+        background: #eee;
+        padding: 6px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .center {
+        text-align: center;
+      }
+
+      /* CodeMirror */
+      .Codemirror {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        line-height: 1.5em;
+        font-family: monospace;
+        height: auto;
+      }
+      .Codemirror-scroll {
+        height: auto;
+      }
+
+      .success, .info, .warning, .error {
+        padding: 6px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .success { background-color: #dff0d8 !important; }
+      .info { background-color: #d9edf7 !important; }
+      .warning { background-color: #fcf8e3 !important; }
+      .error { background-color: #f2dede !important; }
+    </style>
+
+
+    <script>
+      document.addEventListener(
+          "DOMContentLoaded",
+          function(event) {
+            var config = {
+              theme: 'candy_land',
+              smartIndent: true,
+              tabSize: 4,
+              // lineNumbers: true,
+              lineWrapping: true,
+              viewportMargin: Infinity
+            };
+            var codeElements = document.getElementsByClassName("code");
+            for (var i = 0; i < codeElements.length; i++) {
+              codeMirror = CodeMirror.fromTextArea(codeElements[i], config);
+            }
+          });
+    </script>
+  </head>
+
+  <body>
+
+    <div class="A4">
+      <h1>Building a Chat Client</h1>
+
+      <p>
+        Below is an image of the environment we'll be working in.
+        It's divided into four parts:
+      </p>
+
+      <ol>
+        <li>
+          The <em>code editor</em> where we will write all the code for our chat client.
+          <br /><br />
+        </li>
+        <li>
+          The code <em>output</em> window where we can <code>print</code> for instance
+          debugging information to, to help us while we're developing our code.
+          <br /><br />
+        </li>
+        <li>
+          The start and stop buttons that will make the code run.
+          <br /><br />
+        </li>
+        <li>
+          The chat UI, which is where we will type in our chat messages and see
+          everybody else's messages.
+        </li>
+      </ol>
+
+      <br />
+
+      <div class="center">
+        <img src="g3400.png"/>
+      </div>
+<br />
+      <fieldset class="notice">
+        <legend>Note</legend>
+
+        <p>
+          This tutorial assumes you have some superficial understanding of programming
+          concept like if statements, while loops and functions.
+          But don't be alarmed, we'll take it slow and even if you don't you should
+          be able to work through the examples.
+        </p>
+      </fieldset>
+    </div>
+
+
+    <div class="A4">
+      <h2>Yo, world!</h2>
+
+      <p class="step">
+        Let's write our first line of code and test that it works.
+        At the bottom of the code editor, write:
+      </p>
+
+      <textarea class="code">
+print 'Hello world!'</textarea>
+
+      <pre class="output">Hello world!</pre>
+
+      <br />
+
+      <fieldset class="notice">
+        <legend>Note</legend>
+
+        <p>
+          You will notice the code is automatically run as you type,
+          and you will like see several error messages pop-up.
+          Don't worry though it is just telling you you're not done typing yet.
+        </p>
+
+        <p>
+          Errors will look like this:
+        </p>
+
+        <textarea class="code">
+  p</textarea>
+        <div class="error">
+          NameError: name 'p' is not defined on line 76
+        </div>
+
+        <p>
+          Which means Python doesn't (yet) know about anything called just "p".
+        </p>
+
+        <p>
+          Or:
+        </p>
+
+        <textarea class="code">
+  print 'H</textarea>
+        <div class="error">
+          ParseError: bad token on line 76
+        </div>
+
+        <p>
+          Which means you're probably missing some characters (like the final ' ).
+        </p>
+      </fieldset>
+    </div>
+
+
+    <div class="A4">
+      <h2>The chat framework.</h2>
+
+      <p>
+        Now let's have a look at the code. Trust me, it's really not as scary
+        as it might seem at first.
+      </p>
+
+      <p>
+        The idea of a "framework" is to have some premade code that does
+        the heavy work while leaving some blank spots for us to fill in and
+        do what we want. Observe:
+      </p>
+
+      <textarea class="code">
+# This method should be "called" (run) every time we receive a message from the chat server.
+def onMessageReceive(message):
+  print 'Received: ' + message
+
+# This method will be called every time we press the 'send' button.
+def onMessageSend(message):
+  print 'Send: ' + message
+
+# This method is called every 1 second.
+def onTimerTick():
+  print 'Tick!'</textarea>
+
+      <p>
+        From the comments (the description in pink) we can already get a good idea
+        about what this code is supposed to do.
+        But best way to make sure is always to test run it and see what the result
+        actually is.
+      </p>
+
+      <p>
+        Press the
+        <i class="material-icons small" style="color: #009900;">play_arrow</i>
+        run button and see how the onTimerTick() function prints a message every second.
+      </p>
+
+      <pre class="output">Tick!
+Tick!
+...</pre>
+
+      <p>
+        Now press the
+        <i class="material-icons small" style="color: #DD4444;">stop</i>
+        stop button to pause that function while we're working on it.
+      </p>
+
+      <p>
+        Lastly try the
+        <i class="material-icons small" style="color: #438AFB;">chat</i>
+        send button and see the onMessageSend(message) function is called.
+      </p>
+
+      <pre class="output">Send: hi</pre>
+
+      <p>
+        If you typed a message into the chat input you should see that printed
+        out as well.
+      </p>
+    </div>
+
+
+    <div class="A4">
+      <h2>A simple chat client.</h2>
+
+      <p>
+        One easy first step to make our chat client useful is to have it echo
+        back any message we try send.
+      </p>
+
+      <p>
+        Let's have a quick look at the existing, very convinient addTextToChat(..) function:
+      </p>
+
+      <textarea class="code">
+# Adds a text box to the chat.
+def addTextToChat(text):
+  ...</textarea>
+
+      <p>
+        So if we call this function, we can add a text to the chat window.
+        Let's try that out in the onMessageSend(..) function:
+      </p>
+
+      <textarea class="code">
+def onMessageSend(message):
+  print 'Send: ' + message
+  addTextToChat(message) # +++ Add this line</textarea>
+
+      <p>
+        Now try type a message into the chat input and press send.
+        The message will show up in the chat output above.
+      </p>
+
+      <p>
+        Next let's quickly add that to the receiving function as well so we
+        might see any incoming messages:
+      </p>
+
+      <textarea class="code">
+def onMessageReceive(message, sender):
+  print 'Received: ' + message
+  addTextToChat(message) # +++ Add this line</textarea>
+
+      <p>
+        If we try run that, that will not however do anything much.
+        To find out why we need to look at one of the other functions.
+      </p>
+
+      <textarea class="code">
+# Get and loop through all messages from the server.
+def receiveAllMessages():
+  messages = getMessagesFromServer()
+  # Loop through all the messages from the server one by one.
+  for messageObject in messages:
+    ...
+    # Hand the message to onMessageReceive.
+    onMessageReceive(message, sender)</textarea>
+
+      <p>
+        So while receiveAllMessages() will call onMessageReceive(..), there's
+        still nothing calling the former in the first place.
+        But we already know a handy place to so do:
+      </p>
+
+      <textarea class="code">
+def onTimerTick():
+  print 'Tick!'
+  receiveAllMessages() # +++ Add this line</textarea>
+
+      <p>
+        Press the run button to check this does in fact work.
+      </p>
+
+      <pre class="output">
+Tick!
+Received: hi!</pre>
+
+    </div>
+
+
+    <div class="A4">
+      <h2>We need to go deeper.</h2>
+
+      <p>
+        We can add emoji and pictures as well..
+      </p>
+
+      <textarea class="code">
+def onMessageSend(message):
+  print 'Send: ' + message
+  if message == ':jackolantern:': # +++ Add this line
+    addImageToChat('img/jackolanternpng') # +++ Add this line
+  else: # +++ Add this line
+    addTextToChat(message)</textarea>
+
+      <p>
+        :)
+      </p>
+
+      <p>
+        How to send that ..
+      </p>
+
+      <textarea class="code">
+def sendImageToServer(..):
+  ..</textarea>
+
+    <p>
+      :)
+    </p>
+
+    <textarea class="code">
+def onMessageReceive(message, sender):
+  message = message.replace(':)', '<img src="img/smiley.png" />')
+  ..</textarea>
+
+    <p>
+      sender..
+    </p>
+
+    <textarea class="code">
+def onMessageReceive(message, sender):
+  addTextToChat(sender + ', says:')
+  addTextToChat('&nbsp;' + message)</textarea>
+    </div>
+
+
+    <div class="A4">
+      <h2>More..</h2>
+
+      <p>
+        Simple, text-based game? Tic-tac-toe?
+      </p>
+    </div>
+
+
+
+  </body>
+</html>
