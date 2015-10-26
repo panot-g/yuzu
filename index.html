@@ -87,6 +87,14 @@
       table td * {
         vertical-align: top;
       }
+
+
+      .chatBubble {
+        border: 1px solid #333;
+        border-radius: 8px;
+        background: #fff;
+        padding: 1ex;
+      }
     </style>
 
     <script type="text/javascript" id="chat_module">
@@ -101,6 +109,7 @@
           chatOutputElement.appendChild(newImage);
           // This seems to cause 'RangeError: Maximum call stack size exceeded'.
           // return Sk.ffi.remapToPy(newImage);
+          return Sk.ffi.stdwrap(mod.Node, newImage);
         });
 
         mod.addTextToChat = new Sk.builtin.func(function(text) {
@@ -111,11 +120,43 @@
           chatOutputElement.appendChild(newDiv);
           // This seems to cause 'RangeError: Maximum call stack size exceeded'.
           // return Sk.ffi.remapToPy(newDiv);
+          return Sk.ffi.stdwrap(mod.Node, newDiv);
+        });
+
+        mod.createChatBubble = new Sk.builtin.func(function(content) {
+          var _content = Sk.ffi.remapToJs(content);
+          var newDiv = document.createElement('div');
+          newDiv.className = 'chatBubble';
+          newDiv.appendChild(_content);
+          return Sk.ffi.stdwrap(mod.Node, newDiv);
+        });
+
+        mod.createText = new Sk.builtin.func(function(text) {
+          var _text = Sk.ffi.remapToJs(text);
+          var newDiv = document.createElement('div');
+          newDiv.appendChild(document.createTextNode(_text));
+          return Sk.ffi.stdwrap(mod.Node, newDiv);
+        });
+
+        mod.addToChat = new Sk.builtin.func(function(node) {
+          var _node = Sk.ffi.remapToJs(node);
+          var chatOutputElement = document.getElementById('chat_output');
+          chatOutputElement.appendChild(_node);
         });
 
         mod.bikeshed = new Sk.builtin.func(function() {
           // bikeshed
         });
+
+        // A simple wrapper around LCD of DOM objects:
+        //  Node <- (Element <- HTMLElement), (TextNode)
+        mod.Node = Sk.misceval.buildClass(
+            mod,
+            function($gbl, $loc) {
+              $loc.__init__ = new Sk.builtin.func(function(self) {});
+            },
+            'Node',
+            []);
 
         return mod;
       }
