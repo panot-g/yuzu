@@ -37,6 +37,13 @@
       }
 
       @media print {
+        html,
+        body,
+        .A4 {
+          margin: 0;
+          padding: 0;
+          border: 0;
+        }
         .A4 {
           page-break-after: always;
         }
@@ -447,6 +454,8 @@ def onMessageReceive(message, sender):
         </p>
       </fieldset>
 
+      <h3>And smiles!</h3>
+
       <p>
         Ok, perhaps something a bit more useful would be to add smileys.
         Luckily, as it turns out, that is as straight forward as adding stamps:
@@ -599,8 +608,8 @@ def onMessageReceive(message, sender):
         </p>
 
         <p>
-          Turns out, proving exactly who sent what, so called <i>authentication</i>,
-          is a much bigger subject we can't fully cover here.
+          Turns out, proving exactly who sent what, so called <i>authentication</i>
+          (in "cryptography"), is a much bigger subject we can't fully cover here.
         </p>
       </fieldset>
 
@@ -613,6 +622,8 @@ def onMessageReceive(message, sender):
           Peter Steiner, The New Yorker, July 5, 1993.
         </cite>
       </div>
+
+      <!-- Fun With Facts: Android has isUserAGoat() and isUserAMonkey() methods. -->
     </div>
 
 
@@ -640,7 +651,7 @@ def addTextToChat(text):
 def createText(text)
 def createImage(imageURL)
 def createChatBubble(contents)
-def createIdenticon(identity, size=32)
+def createIdenticon(identity, size='32')
 def createGroup(contents)
 def addToChat(object)
 def clearChat()</textarea>
@@ -680,27 +691,33 @@ def onMessageReceive(message, sender):
         but at the same time always the same when generated from the same text.
         In this case we used the sender address, so the same address
         will always generate the same user image.
-        This is called 'Hashing'.
+        (See 'Hashing')
       </p>
     </div>
 
 
     <div class="A4">
-      <h2>More for pros!</h2>
+      <h2>More for pros</h2>
 
-      <h3>Hi! Hi! Hi! ...</h3>
+      <h3>Hi! .. Hi! .. Hi! ...</h3>
 
       <p>
-        You might have noticed that the same messages appear again and again every times the clock ticks.
+        You might have noticed that the same messages appear again and again
+        every time the clock ticks:
       </p>
 
-      <div class="center">
-        Add image here.
-      </div>
+      <pre class="output">
+Tick!
+Received: Hi!
+Tick!
+Received: Hi!
+...</pre>
 
       <p>
-        This is because the receiveAllMessages() function gets 20 latest messages from the server.
-        How can we fix it?
+        This is because every time receiveAllMessages() ask messages
+        the server returns the last 20 messages it received.
+        This means we have to do some more work to avoid showing the same messages
+        over and over again.
       </p>
 
       <fieldset class="hint">
@@ -717,6 +734,34 @@ def onMessageReceive(message, sender):
         </p>
       </fieldset>
 
+
+      <h3>Guess which number I'm thinking of!</h3>
+
+      <p>
+        Another interesting challenge is to build your own mini game into the chat.
+        For instance have the program come up with a random number everyone has
+        to guess which number it is.
+      </p>
+
+      <p>
+        The 'random' module has a function, <code>random.randint(min, max)</code>
+        that generates random numbers (integers) between min and max:
+      </p>
+
+      <textarea class="code" data-highlight-lines="">
+import random
+
+# This will print a random number between 1 and 6, both included.
+print random.randint(1, 6)</textarea>
+
+      <pre class="output">
+4</pre>
+
+      <p>
+        The trick would then be to save the number, check each
+        received message against our number, and then send a message when someone
+        gets it right.
+      </p>
     </div>
 
   </body>
