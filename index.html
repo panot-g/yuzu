@@ -28,6 +28,7 @@
       #chat_output {
         height: 30em;
         overflow-y: scroll;
+        margin: 1ex;
       }
 
       #chat_input {
@@ -90,10 +91,12 @@
 
 
       .chatBubble {
-        border: 1px solid #333;
-        border-radius: 8px;
-        background: #fff;
+        border: 1px solid #A7A7A7;
+        border-radius: 4px;
+        background: #FBFBFB;
         padding: 1ex;
+        margin: 1ex;
+        display: inline-block;
       }
     </style>
 
@@ -123,6 +126,37 @@
           return Sk.ffi.stdwrap(mod.Node, newDiv);
         });
 
+        mod.createGroup = new Sk.builtin.func(function(contents) {
+          var _contents = Sk.ffi.remapToJs(contents);
+          var newDiv = document.createElement('div');
+          if (Array.isArray && Array.isArray(_contents)) {
+            for (var i = 0; i < _contents.length; i++) {
+              newDiv.appendChild(_contents[i]);
+            }
+          } else {
+            newDiv.appendChild(_contents);
+          }
+          return Sk.ffi.stdwrap(mod.Node, newDiv);
+        });
+
+        mod.createText = new Sk.builtin.func(function(text) {
+          var _text = Sk.ffi.remapToJs(text);
+          var newTextNode = document.createTextNode(_text);
+          return Sk.ffi.stdwrap(mod.Node, newTextNode);
+        });
+
+        mod.createLineBreak = new Sk.builtin.func(function() {
+          var newElement = document.createElement('br');
+          return Sk.ffi.stdwrap(mod.Node, newElement);
+        });
+
+        mod.createImage = new Sk.builtin.func(function(src) {
+          var _src = Sk.ffi.remapToJs(src);
+          var newImage = document.createElement('img');
+          newImage.src = _src;
+          return Sk.ffi.stdwrap(mod.Node, newImage);
+        });
+
         mod.createChatBubble = new Sk.builtin.func(function(content) {
           var _content = Sk.ffi.remapToJs(content);
           var newDiv = document.createElement('div');
@@ -131,17 +165,12 @@
           return Sk.ffi.stdwrap(mod.Node, newDiv);
         });
 
-        mod.createText = new Sk.builtin.func(function(text) {
-          var _text = Sk.ffi.remapToJs(text);
-          var newDiv = document.createElement('div');
-          newDiv.appendChild(document.createTextNode(_text));
-          return Sk.ffi.stdwrap(mod.Node, newDiv);
-        });
-
         mod.addToChat = new Sk.builtin.func(function(node) {
           var _node = Sk.ffi.remapToJs(node);
           var chatOutputElement = document.getElementById('chat_output');
-          chatOutputElement.appendChild(_node);
+          var newDiv = document.createElement('div');
+          newDiv.appendChild(_node);
+          chatOutputElement.appendChild(newDiv);
         });
 
         mod.bikeshed = new Sk.builtin.func(function() {
@@ -418,7 +447,13 @@ import json
 
 
 CHAT_SERVER_ADDRESS = 'http://localhost:8080/chat'
-
+SOME_EMOJI = [
+  u'🙂', u'😀', u'😉', u'😎', u'😮', u'😛', u'👦', u'👧', u'👨', u'👩',
+  u'🎅', u'🙏', u'💃', u'🖖', u'✌️', u'✊', u'✋', u'👍', u'👎', u'👓',
+  u'💎', u'🐶', u'🐱', u'🐯', u'🐴', u'🐷', u'🐼', u'🌸', u'🍒',
+  u'🍔', u'🍕', u'🍙', u'🍣', u'🍦', u'🍰', u'☕️', u'🗺', u'🗻',
+  u'♨️', u'🚃', u'🚌', u'🚲', u'🎃'
+]
 
 # This method should be called (run) every time we receive a message from the chat server.
 def onMessageReceive(message, sender):
@@ -479,13 +514,37 @@ def sendMessageToServer(message):
   print connectionToServer.read()
 
 
-# Adds an image to the chat window.
-def addImageToChat(imageURL):
-  chat.addImageToChat(imageURL)
-
 # Adds a text box to the chat.
 def addTextToChat(text):
-  chat.addTextToChat(text)
+  addToChat(
+      createText(text))
+
+# Adds an image to the chat window.
+def addImageToChat(imageURL):
+  addToChat(
+      createImage(imageURL))
+
+# Creates a "text object" from some text, which can be added to the chat later.
+def createText(text):
+  return chat.createText(text)
+
+# Creates an "image object" from an URL, which can be added to the chat later.
+def createImage(imageURL):
+  return chat.createImage(imageURL)
+
+# Creates a "chat bubble object", which can have some content and be added to
+# the chat later.
+def createChatBubble(contents):
+  return chat.createChatBubble(text)
+
+# Create image with an automatically generated "Identi(ty I)con".
+def createIdenticon(identity, size=32):
+  return chat.createImage('http://identicon.org?s=' + size + '&amp;t=' + identity)
+
+# Adds 'object' to the chat window - for instance a text object or a chat bubble
+# object.
+def addToChat(object):
+  chat.addToChat(object)
 </textarea>
 
             <div id="controls">
