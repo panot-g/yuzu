@@ -57,9 +57,22 @@
         padding: 0 2ex;
       }
 
+      .notice,
+      .hint {
+        border: 1px solid #bbb;
+      }
+
+      .notice legend,
+      .hint legend {
+        font-style:italic;
+      }
+
       .notice {
         background: #f0f0f0;
-        border: 1px solid #bbb;
+      }
+
+      .hint {
+        background: rgba(0, 255, 0, 0.05);
       }
 
       .output {
@@ -94,6 +107,10 @@
       .info { background-color: #d9edf7 !important; }
       .warning { background-color: #fcf8e3 !important; }
       .error { background-color: #f2dede !important; }
+
+      .CodeMirror-code .highlight-line {
+        background: rgba(0, 255, 0, 0.25);
+      }
     </style>
 
 
@@ -112,6 +129,13 @@
             var codeElements = document.getElementsByClassName("code");
             for (var i = 0; i < codeElements.length; i++) {
               codeMirror = CodeMirror.fromTextArea(codeElements[i], config);
+              var highlightLinesAttribute = codeElements[i].getAttribute('data-highlight-lines');
+              if (highlightLinesAttribute) {
+                var highlightLines = JSON.parse(highlightLinesAttribute);
+                for (var j = 0; j < highlightLines.length; j++) {
+                  codeMirror.addLineClass(highlightLines[j], "text" /*where*/, "highlight-line");
+                }
+              }
             }
           });
     </script>
@@ -309,7 +333,7 @@ def addTextToChat(text):
         Let's try that out in the onMessageSend(..) function:
       </p>
 
-      <textarea class="code">
+      <textarea class="code" data-highlight-lines="[2]">
 def onMessageSend(message):
   print 'Send: ' + message
   addTextToChat(message) # +++ Add this line</textarea>
@@ -324,7 +348,7 @@ def onMessageSend(message):
         might see any incoming messages:
       </p>
 
-      <textarea class="code">
+      <textarea class="code" data-highlight-lines="[2]">
 def onMessageReceive(message, sender):
   print 'Received: ' + message
   addTextToChat(message) # +++ Add this line</textarea>
@@ -350,7 +374,7 @@ def receiveAllMessages():
         But we already know a handy place to so do:
       </p>
 
-      <textarea class="code">
+      <textarea class="code" data-highlight-lines="[2]">
 def onTimerTick():
   print 'Tick!'
   receiveAllMessages() # +++ Add this line</textarea>
@@ -376,7 +400,7 @@ Received: hi!</pre>
         For example, when the user type ':jackolantern:' into the chat, we'll show the picture of jack-o'-lantern, using the addImageToChat(..) function.
       </p>
 
-      <textarea class="code">
+      <textarea class="code" data-highlight-lines="[2, 3, 4]">
 def onMessageSend(message):
   print 'Send: ' + message
   if message == ':jackolantern:': # +++ Add this line
@@ -384,16 +408,26 @@ def onMessageSend(message):
   else: # +++ Add this line
     addTextToChat(message)</textarea>
 
+    <fieldset class="notice">
+      <legend>Note</legend>
+
+      <p>
+        As you might know, in Python <em>indentation</em> matters.
+        Though the last line above hasn't changed, we still need to add some
+        some spaces in front of it, since it belongs "inside" the else block.
+      </p>
+    </fieldset>
+
       <p>
         Likewise, when we received the text ':jackolantern:', we should show the picture of jack-o'-lantern.
       </p>
 
-      <textarea class="code">
+      <textarea class="code" data-highlight-lines="[2, 3, 4]">
 def onMessageReceive(message, sender):
   print 'Received: ' + message
   if message == ':jackolantern:': # +++ Add this line
     addImageToChat('img/jackolantern.png') # +++ Add this line
-  else: # Add this line
+  else: # +++ Add this line
     addTextToChat(message)</textarea>
 
     <p>
@@ -418,7 +452,7 @@ def onMessageReceive(message, sender):
       The code below shows how to display that 'sender' information in the chat box.
     </p>
 
-    <textarea class="code">
+    <textarea class="code" data-highlight-lines="[1]">
 def onMessageReceive(message, sender):
   addTextToChat(sender + ' says:') # +++ Add this line.
   addTextToChat('&nbsp;' + message)</textarea>
@@ -448,7 +482,7 @@ def onMessageReceive(message, sender):
         How can we fix it?
       </p>
 
-      <fieldset class="notice">
+      <fieldset class="hint">
         <legend>Hint</legend>
 
         <p>
