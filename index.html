@@ -28,7 +28,17 @@
       #chat_output {
         height: 30em;
         overflow-y: scroll;
-        margin: 1ex;
+        /*margin: 1ex;*/
+        vertical-align: middle;
+      }
+
+      #chat_output > * {
+        margin: 2ex 0;
+        vertical-align: middle;
+      }
+
+      #chat_output * {
+        vertical-align: middle;
       }
 
       #chat_input {
@@ -85,7 +95,7 @@
       .error { background-color: #f2dede !important; }
 
       table td,
-      table td * {
+      table td > * {
         vertical-align: top;
       }
 
@@ -97,6 +107,7 @@
         padding: 1ex;
         margin: 1ex;
         display: inline-block;
+        vertical-align: middle;
       }
     </style>
 
@@ -171,6 +182,14 @@
           var newDiv = document.createElement('div');
           newDiv.appendChild(_node);
           chatOutputElement.appendChild(newDiv);
+        });
+
+        mod.clearChat = new Sk.builtin.func(function() {
+          var chatOutputElement = document.getElementById('chat_output');
+          while (chatOutputElement.children.length > 0) {
+            chatOutputElement.removeChild(
+                chatOutputElement.children[chatOutputElement.children.length-1])
+          }
         });
 
         mod.bikeshed = new Sk.builtin.func(function() {
@@ -446,14 +465,16 @@ import chat
 import json
 
 
+# This is the address of the server that keeps track of all the messages.
 CHAT_SERVER_ADDRESS = 'http://localhost:8080/chat'
-SOME_EMOJI = [
-  u'🙂', u'😀', u'😉', u'😎', u'😮', u'😛', u'👦', u'👧', u'👨', u'👩',
-  u'🎅', u'🙏', u'💃', u'🖖', u'✌️', u'✊', u'✋', u'👍', u'👎', u'👓',
-  u'💎', u'🐶', u'🐱', u'🐯', u'🐴', u'🐷', u'🐼', u'🌸', u'🍒',
-  u'🍔', u'🍕', u'🍙', u'🍣', u'🍦', u'🍰', u'☕️', u'🗺', u'🗻',
-  u'♨️', u'🚃', u'🚌', u'🚲', u'🎃'
-]
+
+# A 'map' that tells for "🙂" when we give it ":)".
+SMILEY_MAP = {
+  ':)': u'🙂',
+  # More smileys:
+  # 🙂🙁😀😉😎😮😛👦👧👨👩🎅🙏💃🖖✌️✊✋👍👎👓💎🐶🐱🐯🐴🐷🐼🌸🍒🍔🍕🍙🍣🍦🍰☕️🗺🗻♨️🚃🚌🚲🎃
+}
+
 
 # This method should be called (run) every time we receive a message from the chat server.
 def onMessageReceive(message, sender):
@@ -532,19 +553,26 @@ def createText(text):
 def createImage(imageURL):
   return chat.createImage(imageURL)
 
-# Creates a "chat bubble object", which can have some content and be added to
-# the chat later.
+# Creates a "chat bubble object", which can have some content and be added to the chat later.
 def createChatBubble(contents):
-  return chat.createChatBubble(text)
+  return chat.createChatBubble(contents)
 
 # Create image with an automatically generated "Identi(ty I)con".
-def createIdenticon(identity, size=32):
+def createIdenticon(identity, size='32'):
   return chat.createImage('http://identicon.org?s=' + size + '&amp;t=' + identity)
 
-# Adds 'object' to the chat window - for instance a text object or a chat bubble
-# object.
+# Creates a "group object", which holds one or several other objects, and can be added to the chat later.
+# The argument 'contents' can either be a single object or a list of objects.
+def createGroup(contents):
+  return chat.createGroup(contents)
+
+# Adds 'object' to the chat window - for instance a text object or a chat bubble object.
 def addToChat(object):
   chat.addToChat(object)
+
+# Removes all things added to the chat window.
+def clearChat():
+  chat.clearChat()
 </textarea>
 
             <div id="controls">
