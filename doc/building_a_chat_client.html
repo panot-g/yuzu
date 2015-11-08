@@ -472,17 +472,17 @@ def onMessageReceive(message, sender):
         </p>
         <cite>https://docs.python.org/2/library/string.html</cite>
       </blockquote>
-    </div>
 
-
-    <div class="A4">
       <p>
         Documentation might be a bit dry and difficult to make sense of if you're
         not used to it.
         Luckily you won't really need to for this project,
         but it's still nice to know where to look if you ever need to.
       </p>
+    </div>
 
+
+    <div class="A4">
       <p>
         What the documentation is telling us is simply that we can call
         <code>s.replace(old, new)</code>
@@ -659,6 +659,29 @@ def onMessageReceive(message, sender):
       createGroup([
           createText(sender),
           createChatBubble(createText(message))]))</textarea>
+
+      <p>
+        To make it a little easier to recognise who's writing, we can also add
+        a generated placeholder user image, an "identicon":
+      </p>
+
+      <textarea class="code" data-highlight-lines="[5]">
+def onMessageReceive(message, sender):
+  for smiley in SMILEY_MAP:
+    message = message.replace(smiley, SMILEY_MAP[smiley])
+  addToChat(
+      createGroup([
+          createIdenticon(sender),
+          createText(sender),
+          createChatBubble(createText(message))]))</textarea>
+
+      <p>
+        A cool feature of these images is that they are completely random,
+        but at the same time always the same when generated from the same text.
+        In this case we used the sender address, so the same address
+        will always generate the same user image.
+        This is called 'Hashing'.
+      </p>
     </div>
 
 
