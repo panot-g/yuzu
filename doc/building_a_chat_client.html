@@ -5,7 +5,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <link href='https://fonts.googleapis.com/css?family=Slabo+27px' rel='stylesheet' type='text/css'>
-    <link href='https://fonts.googleapis.com/css?family=Lora' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
 
     <link rel=stylesheet href="../codemirror/lib/codemirror.css">
     <link rel=stylesheet href="../codemirror/theme/candy_land.css">
@@ -17,6 +17,7 @@
       @media screen {
         html {
           background: #DDDDDD;
+          width: 100%;
         }
 
         body {
@@ -33,32 +34,39 @@
           /* 3D shadow */
           box-shadow: 0px 0px 1px #999,
                       2px 2px 4px #999;
+          border: 0;
+        }
+
+        .A4:hover {
+          /* Page inner margin shadow */
+          box-shadow: inset 10mm -10mm 0px rgba(255, 0, 0, 0.06),
+                      inset -10mm 10mm 0px rgba(255, 0, 0, 0.06);
         }
       }
 
       @media print {
-        html,
-        body,
-        .A4 {
-          margin: 0;
-          padding: 0;
-          border: 0;
-        }
         .A4 {
           page-break-after: always;
+          width: 190mm; /*210mm - 2x10mm*/
+          height: 277mm; /*297mm - 2x10mm*/
         }
       }
 
-
       html {
-        /*font-family: 'Slabo 27px', serif;*/
-        font-family: 'Lora', serif;
-        line-height: 130%;
+        font-family: 'Slabo 27px', serif;
+        font-size: 12pt;
+        line-height: 1.2em;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: 'Raleway', sans-serif;
       }
 
       img {
         max-width: 100%;
-        border: 1px solid #000;
       }
 
       fieldset {
@@ -178,7 +186,6 @@
   </head>
 
   <body>
-
     <div class="A4">
       <h1>Building a Chat Client</h1>
 
