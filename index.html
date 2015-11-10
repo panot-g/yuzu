@@ -9,11 +9,19 @@
     <script src="skulpt/skulpt.min.js" type="text/javascript"></script>
     <script src="skulpt/skulpt-stdlib.js" type="text/javascript"></script>
 
-    <link rel=stylesheet href="codemirror/lib/codemirror.css">
-    <link rel=stylesheet href="codemirror/theme/candy_land.css">
+    <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="codemirror/theme/candy_land.css">
+    <link rel="stylesheet" href="codemirror/addon/fold/foldgutter.css">
     <script src="codemirror/lib/codemirror.js"></script>
     <script src="codemirror/mode/python/python.js"></script>
     <script src="codemirror/mode/javascript/javascript.js"></script>
+    <script src="codemirror/addon/fold/foldcode.js"></script>
+    <script src="codemirror/addon/fold/foldgutter.js"></script>
+    <script src="codemirror/addon/fold/brace-fold.js"></script>
+    <script src="codemirror/addon/fold/comment-fold.js"></script>
+    <script src="codemirror/addon/fold/indent-fold.js"></script>
+    <script src="codemirror/addon/fold/markdown-fold.js"></script>
+    <script src="codemirror/addon/fold/xml-fold.js"></script>
 
     <style>
       #log p,
@@ -361,13 +369,28 @@
           lineNumbers: true,
           lineWrapping: true,
           // Code folding.
-          // foldGutter: true,
-          // gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+          foldGutter: {
+            rangeFinder: new CodeMirror.fold.combine(
+                CodeMirror.fold.brace,
+                CodeMirror.fold.comment,
+                CodeMirror.fold.indent)
+          },
+          gutters: [
+            "CodeMirror-linenumbers",
+            "CodeMirror-foldgutter"
+          ],
           // Active line highlighting.
           // styleActiveLine: true,
         };
 
         codeMirror = CodeMirror.fromTextArea(codeElement, config);
+
+        var linesToFold = JSON.parse(
+            codeElement.getAttribute('data-lines-to-fold'));
+        for (var i = 0; i < linesToFold.length; i++) {
+          var lineNumber = linesToFold[i];
+          codeMirror.foldCode(CodeMirror.Pos(lineNumber, 0));
+        }
 
         // Whenever changes are made to the code, auto-save to Local Storage.
         codeMirror.on("change", function (cm) {
@@ -458,7 +481,9 @@
       <tr>
         <td>
           <form>
-            <textarea id="code">
+            <textarea id="code" data-lines-to-fold="[
+10, 35, 46, 63, 77, 82, 87, 91, 95, 99, 104, 108, 112
+]">
 # Load a library that allows us to "open" an URL (web address).
 import urllib.request
 import chat
